@@ -2,8 +2,9 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Download, Share2, RotateCcw, Sparkles, Volume2, VolumeX } from 'lucide-react';
+import { Download, RotateCcw, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import { Confetti } from './Confetti';
+import { ShareDialog } from './ShareDialog';
 import { useSounds } from '@/hooks/useSounds';
 import { toast } from 'sonner';
 
@@ -237,71 +238,6 @@ export const ImageReveal: React.FC<ImageRevealProps> = ({
     toast.success("Image downloaded! 📥");
   };
 
-  // Enhanced share functionality with metadata
-  const shareImage = async () => {
-    if (!isCompleted) {
-      toast.error("Complete the reveal first! 🎨");
-      return;
-    }
-
-    try {
-      // Create a canvas with the revealed image for sharing
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = hiddenImageRef.current;
-      
-      if (ctx && img) {
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        ctx.drawImage(img, 0, 0);
-        
-        // Convert to blob for sharing
-        canvas.toBlob(async (blob) => {
-          if (blob && navigator.share) {
-            try {
-              await navigator.share({
-                title: 'Amazing Image Revealed! ✨',
-                text: 'I just scratched and revealed this incredible hidden image! 🎨✨ #ImageReveal #Discovery',
-                url: window.location.href,
-                files: [new File([blob], 'revealed-image.png', { type: 'image/png' })]
-              });
-              toast.success("Shared successfully! 🚀");
-            } catch {
-              // Fallback if file sharing fails
-              fallbackShare();
-            }
-          } else {
-            fallbackShare();
-          }
-        }, 'image/png');
-      } else {
-        fallbackShare();
-      }
-    } catch (error) {
-      fallbackShare();
-    }
-  };
-
-  const fallbackShare = async () => {
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: 'Amazing Image Revealed! ✨',
-          text: 'I just scratched and revealed this incredible hidden image! 🎨✨ #ImageReveal #Discovery',
-          url: window.location.href
-        });
-        toast.success("Shared successfully! 🚀");
-      } else {
-        await navigator.clipboard.writeText(
-          `Amazing Image Revealed! ✨\n\nI just scratched and revealed this incredible hidden image! 🎨✨\n\n${window.location.href}\n\n#ImageReveal #Discovery`
-        );
-        toast.success("Link and description copied to clipboard! 📋");
-      }
-    } catch (error) {
-      toast.error("Sharing failed. Try again! 📤");
-    }
-  };
-
   return (
     <motion.div 
       className="relative w-full max-w-2xl mx-auto"
@@ -420,15 +356,11 @@ export const ImageReveal: React.FC<ImageRevealProps> = ({
         </motion.div>
         
         <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Button
-            onClick={shareImage}
-            size="sm"
-            className="w-full bg-gradient-to-r from-primary to-primary-glow"
-            disabled={!isCompleted}
-          >
-            <Share2 className="w-4 h-4 mr-2" />
-            Share
-          </Button>
+          <ShareDialog
+            imageUrl={hiddenImageSrc}
+            isCompleted={isCompleted}
+            onDownload={downloadImage}
+          />
         </motion.div>
         
         {/* Sound Toggle */}

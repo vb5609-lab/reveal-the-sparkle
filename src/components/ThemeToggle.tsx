@@ -7,6 +7,7 @@ export const ThemeToggle: React.FC = () => {
 
   useEffect(() => {
     // Check for saved theme preference or default to 'dark'
+    if (typeof window === 'undefined') return;
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     
@@ -16,6 +17,7 @@ export const ThemeToggle: React.FC = () => {
   }, []);
 
   const updateTheme = (newTheme: 'light' | 'dark') => {
+    if (typeof window === 'undefined') return;
     const root = window.document.documentElement;
     
     // Remove existing theme classes
@@ -25,7 +27,9 @@ export const ThemeToggle: React.FC = () => {
     root.classList.add(newTheme);
     
     // Save to localStorage
-    localStorage.setItem('theme', newTheme);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('theme', newTheme);
+    }
   };
 
   const toggleTheme = () => {
